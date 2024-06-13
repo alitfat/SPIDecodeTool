@@ -15,6 +15,7 @@ class Ui_SPIDecodeToolGUI(object):
     def setupUi(self, SPIDecodeToolGUI):
         SPIDecodeToolGUI.setObjectName("SPIDecodeToolGUI")
         SPIDecodeToolGUI.setWindowModality(QtCore.Qt.NonModal)
+        SPIDecodeToolGUI.setWindowFlags(QtCore.Qt.WindowType.Window)
         SPIDecodeToolGUI.setEnabled(True)
         SPIDecodeToolGUI.resize(800, 375)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
