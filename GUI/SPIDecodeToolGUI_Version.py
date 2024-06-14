@@ -8,7 +8,7 @@ class SPIDecodeTool_VerGUI(QWidget):
         self.resize(300, 90)
         
         layout = QFormLayout()
-        self.lbVer = QLabel("Version   \t：1.4.0\n" + 
+        self.lbVer = QLabel("Version   \t：2.1.0\n" + 
                             "Created by \t：GaoHongyu\n" + 
                             "MailAddress\t：alitfat142@gmail.com\n" + 
                             "Created at \t：自宅")
