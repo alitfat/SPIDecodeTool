@@ -122,6 +122,14 @@
       <Enabled>True</Enabled>
       <Hidden>False</Hidden>
     </cbDstFileOverWrite>
+    <cb2ExcelFile>
+      <Name>cb2ExcelFile</Name>
+      <QtWidget>QCheckBox</QtWidget>
+      <Text>Excelファイルへ出力</Text>
+      <Checked>False</Checked>
+      <Enabled>True</Enabled>
+      <Hidden>False</Hidden>
+    </cb2ExcelFile>
     <btDstFileProcess>
       <Name>btDstFileProcess</Name>
       <QtWidget>QPushButton</QtWidget>
