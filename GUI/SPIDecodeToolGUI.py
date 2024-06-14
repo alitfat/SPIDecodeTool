@@ -12,13 +12,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_SPIDecodeToolGUI(object):
-    def setupUi(self, SPIDecodeToolGUI):
+    def setupUi(self, SPIDecodeToolGUI:QtWidgets.QWidget):
         SPIDecodeToolGUI.setObjectName("SPIDecodeToolGUI")
-        SPIDecodeToolGUI.setWindowModality(QtCore.Qt.NonModal)
+        SPIDecodeToolGUI.setWindowModality(QtCore.Qt.WindowModality.NonModal)
         SPIDecodeToolGUI.setWindowFlags(QtCore.Qt.WindowType.Window)
         SPIDecodeToolGUI.setEnabled(True)
         SPIDecodeToolGUI.resize(800, 375)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(SPIDecodeToolGUI.sizePolicy().hasHeightForWidth())
@@ -38,11 +38,11 @@ class Ui_SPIDecodeToolGUI(object):
         self.menuHelp.setObjectName("menuHelp")
         self.lbObjFileName = QtWidgets.QLabel(SPIDecodeToolGUI)
         self.lbObjFileName.setGeometry(QtCore.QRect(10, 40, 101, 16))
-        self.lbObjFileName.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lbObjFileName.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.lbObjFileName.setObjectName("lbObjFileName")
         self.lbDstFileName = QtWidgets.QLabel(SPIDecodeToolGUI)
         self.lbDstFileName.setGeometry(QtCore.QRect(9, 170, 101, 20))
-        self.lbDstFileName.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lbDstFileName.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.lbDstFileName.setObjectName("lbDstFileName")
         self.txObjFileName = QtWidgets.QTextEdit(SPIDecodeToolGUI)
         self.txObjFileName.setGeometry(QtCore.QRect(120, 40, 480, 50))
@@ -60,8 +60,8 @@ class Ui_SPIDecodeToolGUI(object):
         self.cbDstFileName.setObjectName("cbDstFileName")
         self.lbDstFilePath = QtWidgets.QLabel(SPIDecodeToolGUI)
         self.lbDstFilePath.setGeometry(QtCore.QRect(10, 100, 101, 20))
-        self.lbDstFilePath.setTextFormat(QtCore.Qt.AutoText)
-        self.lbDstFilePath.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lbDstFilePath.setTextFormat(QtCore.Qt.TextFormat.AutoText)
+        self.lbDstFilePath.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.lbDstFilePath.setObjectName("lbDstFilePath")
         self.txDstFilePath = QtWidgets.QTextEdit(SPIDecodeToolGUI)
         self.txDstFilePath.setEnabled(False)
@@ -86,9 +86,14 @@ class Ui_SPIDecodeToolGUI(object):
         self.btDstFileProcess.setFont(font)
         self.btDstFileProcess.setObjectName("btDstFileProcess")
         self.cbDstFileOverWrite = QtWidgets.QCheckBox(SPIDecodeToolGUI)
-        self.cbDstFileOverWrite.setGeometry(QtCore.QRect(410, 210, 121, 16))
+        self.cbDstFileOverWrite.setGeometry(QtCore.QRect(370, 210, 121, 16))
         self.cbDstFileOverWrite.setChecked(True)
         self.cbDstFileOverWrite.setObjectName("cbDstFileOverWrite")
+        self.cb2ExcelFile = QtWidgets.QCheckBox(SPIDecodeToolGUI)
+        self.cb2ExcelFile.setEnabled(True)
+        self.cb2ExcelFile.setGeometry(QtCore.QRect(510, 210, 121, 16))
+        self.cb2ExcelFile.setChecked(False)
+        self.cb2ExcelFile.setObjectName("cb2ExcelFile")
         self.actionOther = QtWidgets.QAction(SPIDecodeToolGUI)
         self.actionOther.setObjectName("actionOther")
         self.actionAboutDstDecodeTool = QtWidgets.QAction(SPIDecodeToolGUI)
@@ -107,6 +112,7 @@ class Ui_SPIDecodeToolGUI(object):
         self.lbDstFileNote.raise_()
         self.btDstFileProcess.raise_()
         self.cbDstFileOverWrite.raise_()
+        self.cb2ExcelFile.raise_()
         self.menuSetting.addAction(self.actionOther)
         self.menuHelp.addAction(self.actionAboutDstDecodeTool)
         self.menubar.addAction(self.menuSetting.menuAction())
@@ -115,7 +121,7 @@ class Ui_SPIDecodeToolGUI(object):
         self.retranslateUi(SPIDecodeToolGUI)
         QtCore.QMetaObject.connectSlotsByName(SPIDecodeToolGUI)
 
-    def retranslateUi(self, SPIDecodeToolGUI):
+    def retranslateUi(self, SPIDecodeToolGUI:QtWidgets.QWidget):
         _translate = QtCore.QCoreApplication.translate
         SPIDecodeToolGUI.setWindowTitle(_translate("SPIDecodeToolGUI", "SPIEditerToolGUI"))
         self.menuSetting.setTitle(_translate("SPIDecodeToolGUI", "menuSetting"))
@@ -135,5 +141,6 @@ class Ui_SPIDecodeToolGUI(object):
         self.lbDstFileNote.setText(_translate("SPIDecodeToolGUI", "※ 👆 Don\'t input the extension name please."))
         self.btDstFileProcess.setText(_translate("SPIDecodeToolGUI", "DstFileProcess"))
         self.cbDstFileOverWrite.setText(_translate("SPIDecodeToolGUI", "overwrite saving"))
+        self.cb2ExcelFile.setText(_translate("SPIDecodeToolGUI", "outputExcelFile"))
         self.actionOther.setText(_translate("SPIDecodeToolGUI", "actionOther(NoUse)"))
         self.actionAboutDstDecodeTool.setText(_translate("SPIDecodeToolGUI", "AboutDstDecodeTool"))
