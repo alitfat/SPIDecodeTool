@@ -1,7 +1,7 @@
 import sys
 import os
 
-from PyQt5.QtWidgets import QDialog,QApplication
+from PyQt5.QtWidgets import QDialog,QApplication,QWidget
 from PyQt5.QtGui import QCloseEvent
 
 from GUI.SPIDecodeToolGUI import Ui_SPIDecodeToolGUI
@@ -23,7 +23,7 @@ class Ui_SPIDecodeTool(Ui_SPIDecodeToolGUI):
         self.Form_SetWindowTitle = "【SPI結果変換】ツール"
         return
     
-    def addUiSetting(self, ui) -> None:
+    def addUiSetting(self, ui:QWidget) -> None:
         """
         -----------------------------------------------------------------
         SPIDecodeTool ui設定追加処理\n
@@ -310,7 +310,8 @@ class SPIDecodeTool(QDialog):
         self.DstFullFileNameList.append(DstFullFileName + '_Memory.txt')
         self.DstFullFileNameList.append(DstFullFileName + '_Timer1.txt')
         self.DstFullFileNameList.append(DstFullFileName + '_Timer2.txt')
-        self.DstFullFileNameList.append(DstFullFileName + '.xlsx')
+        if self.ui.cb2ExcelFile.isChecked() :
+            self.DstFullFileNameList.append(DstFullFileName + '.xlsx')
         bResultList = self.FileSysProcess.judgeFilesExsit(self.DstFullFileNameList,True)
         if len(bResultList) != 0:
             DstExsitFileList:list[str] = []
