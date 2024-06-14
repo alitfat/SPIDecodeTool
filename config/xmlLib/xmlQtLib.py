@@ -1,7 +1,7 @@
 import copy
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import  ElementTree,Element
-from PyQt5.QtWidgets import QWidget, QMenu, QAction, QTextEdit, QLabel, QCheckBox, QComboBox, QPushButton, QGroupBox, QRadioButton, QListWidget
+from PyQt5.QtWidgets import QWidget, QMenu, QAction, QTextEdit, QLabel, QCheckBox, QComboBox, QPushButton, QGroupBox, QRadioButton, QListWidget,QLineEdit
 from config.xmlLib.xmlLib import xmlLib, convertStr
 
 class xmlQtLabelValue(xmlLib):
@@ -21,9 +21,9 @@ class xmlQtLabelValue(xmlLib):
 
 class xmlQt(xmlLib):
     label:dict[str, str]= {}
-    qtObj:QWidget|QMenu|QAction|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None
+    qtObj:QWidget|QMenu|QAction|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None
 
-    def __init__(self, labelName = "", WidgetName = "xmlQt", qtObj:QWidget|QMenu|QAction|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
+    def __init__(self, labelName = "", WidgetName = "xmlQt", qtObj:QWidget|QMenu|QAction|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
         self.label.clear()
         self.label = copy.deepcopy(self.label)
         self.label["Name"] = labelName
@@ -77,7 +77,7 @@ class xmlQt(xmlLib):
                 self.label[labelName] = labelValue.replace("\\n","\n")
         return eleSubElement
      
-    def updateConfigSetting(self, qtObj:QWidget|QMenu|QAction|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
+    def updateConfigSetting(self, qtObj:QWidget|QMenu|QAction|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
         if qtObj is None:
             qtObj = self.qtObj
         if qtObj is None:
@@ -103,7 +103,7 @@ class xmlQt(xmlLib):
                     
                 case "Enabled": self.label[labelName] = str(qtObj.isEnabled())
                 case "Hidden":
-                    if isinstance(qtObj, (QMenu|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|QGroupBox)) :
+                    if isinstance(qtObj, (QMenu|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|QGroupBox)) :
                         self.label[labelName] = str(qtObj.isHidden())
                 case "Checked":
                     if isinstance(qtObj, (QCheckBox,QRadioButton)) :
@@ -111,7 +111,7 @@ class xmlQt(xmlLib):
                 case _: pass
         return
     
-    def updateGUISetting(self, qtObj:QWidget|QMenu|QAction|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
+    def updateGUISetting(self, qtObj:QWidget|QMenu|QAction|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
         if qtObj is None:
             qtObj = self.qtObj
         if qtObj is None:
@@ -135,7 +135,7 @@ class xmlQt(xmlLib):
                        
                 case "Enabled": qtObj.setEnabled(convertStr(labelValue).bool())
                 case "Hidden":
-                    if isinstance(qtObj, (QMenu|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|QGroupBox)) : 
+                    if isinstance(qtObj, (QMenu|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|QGroupBox)) : 
                         qtObj.setHidden(convertStr(labelValue).bool())
                 case "Checked":
                     if isinstance(qtObj, QCheckBox|QRadioButton) :
@@ -318,7 +318,17 @@ class xmlQTextEdit(xmlQt):
         self.label["Enabled"] = str(bEnabled)
         self.label["Hidden"] = str(bHidden)
         return
+
+class xmlQLineEdit(xmlQt):
+    label:dict[str, str]= {}
     
+    def __init__(self,labelName:str = "", text:str = "", bEnabled = True, bHidden = False, qtObj:QLineEdit|None = None)-> None:
+        super(xmlQLineEdit, self).__init__(labelName,"QLineEdit", qtObj=qtObj) 
+        self.label["Text"] = text
+        self.label["Enabled"] = str(bEnabled)
+        self.label["Hidden"] = str(bHidden)
+        return
+
 
 class xmlQGroupBox(xmlQt):
     label:dict[str, str]= {}
@@ -473,7 +483,7 @@ class xmlQComboBox(xmlQt, xmlQItemList):
             self.outputEleItems(eleQt)
         return eleSubQt
     
-    def updateGUISetting(self, qtObj:QMenu|QAction|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
+    def updateGUISetting(self, qtObj:QMenu|QAction|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
         if qtObj is None:
             qtObj = self.qtObj
         if qtObj is None:
@@ -520,13 +530,13 @@ class xmlQListWidget(xmlQt, xmlQItemList):
             self.outputEleItems(eleItemList)
         return eleSubQt
     
-    def updateConfigSetting(self, qtObj:QWidget|QMenu|QAction|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
+    def updateConfigSetting(self, qtObj:QWidget|QMenu|QAction|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
         super(xmlQListWidget, self).updateConfigSetting(qtObj)
         if isinstance(qtObj, QListWidget) :
             self.updateItems(qtObj)
         return
 
-    def updateGUISetting(self, qtObj:QMenu|QAction|QTextEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
+    def updateGUISetting(self, qtObj:QMenu|QAction|QTextEdit|QLineEdit|QLabel|QPushButton|QCheckBox|QGroupBox|QComboBox|QRadioButton|QListWidget|None = None)-> None:
         if qtObj is None:
             qtObj = self.qtObj
         if qtObj is None:

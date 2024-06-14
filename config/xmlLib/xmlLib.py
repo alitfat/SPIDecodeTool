@@ -77,8 +77,8 @@ class xmlLib(object):
     def getEleLabelName(self, eleTree:ElementTree|Element, defalutEleLabelName:str = "")-> str:
         return self.getEleText(eleTree, "Name", defalutEleLabelName).str()
     
-    def addEleLabel(self, eleElement:Element, eleLabelName:str = "Name", eleLabelText:str = "")-> Element:
-        eleSubElement = ET.SubElement(eleElement, eleLabelName )
+    def addEleLabel(self, eleElement:Element, eleLabelName:str = "Name", eleLabelText:str = "", eleTagDict: dict[str, str] = {})-> Element:
+        eleSubElement = ET.SubElement(eleElement, eleLabelName, eleTagDict )
         eleSubElement.text = eleLabelText
         return eleSubElement
 
@@ -87,8 +87,8 @@ class xmlLib(object):
             eleSubElement = self.addEleLabel(eleElement, labelKey, labelData)
         return eleSubElement
 
-    def addSubElement(self, eleElement:Element, eleSubElementName:str = "")-> Element:
-        eleSubElement = ET.SubElement(eleElement, eleSubElementName)
+    def addSubElement(self, eleElement:Element, eleSubElementName:str = "", eleTagDict: dict[str, str] = {})-> Element:
+        eleSubElement = ET.SubElement(eleElement, eleSubElementName, eleTagDict)
         return eleSubElement
 
     def judgeElement(self, eleElement:Element, eleTagNme:str, eleTagDict:dict[str, str]|None = None)->bool:

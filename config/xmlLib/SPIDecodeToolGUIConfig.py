@@ -170,6 +170,8 @@ class actionToolList(xmlLib):
     lbDstFileNote:xmlQLabel
     #cbDstFileOverWrite
     cbDstFileOverWrite:xmlQCheckBox
+    #cb2ExcelFile
+    cb2ExcelFile:xmlQCheckBox
     
     #btDstFileProcess
     btDstFileProcess:xmlQPushButton
@@ -247,6 +249,13 @@ class actionToolList(xmlLib):
         self.cbDstFileOverWriteChecked = False
         self.cbDstFileOverWriteEnabled = True
         self.cbDstFileOverWriteHidden = True
+        
+        #cb2ExcelFile
+        self.cb2ExcelFileName = "cb2ExcelFile"
+        self.cb2ExcelFileText = "outputExcelFile"
+        self.cb2ExcelFileChecked = False
+        self.cb2ExcelFileEnabled = True
+        self.cb2ExcelFileHidden = True
         
         #btDstFileProcess
         self.btDstFileProcessName = "btDstFileProcess"
@@ -338,6 +347,13 @@ class actionToolList(xmlLib):
                                    self.cbDstFileOverWriteHidden)
         
         
+        #cb2ExcelFile
+        self.cb2ExcelFile = xmlQCheckBox(self.cb2ExcelFileName,
+                                         self.cb2ExcelFileText,
+                                         self.cb2ExcelFileChecked,
+                                         self.cb2ExcelFileEnabled,
+                                         self.cb2ExcelFileHidden)
+        
         #btDstFileProcess
         self.btDstFileProcess = xmlQPushButton(self.btDstFileProcessName,
                                        self.btDstFileProcessText, 
@@ -377,6 +393,8 @@ class actionToolList(xmlLib):
         self.lbDstFileNote.getConfigSetting(eleActionTool,self.lbDstFileNoteName)
         #cbDstFileOverWrite
         self.cbDstFileOverWrite.getConfigSetting(eleActionTool,self.cbDstFileOverWriteName)
+        #cb2ExcelFile
+        self.cb2ExcelFile.getConfigSetting(eleActionTool,self.cb2ExcelFileName)
         
         #btDstFileProcess
         self.btDstFileProcess.getConfigSetting(eleActionTool,self.btDstFileProcessName)
@@ -411,6 +429,8 @@ class actionToolList(xmlLib):
         self.lbDstFileNote.outputConfigSetting(eleActionTool)
         #cbDstFileOverWrite
         self.cbDstFileOverWrite.outputConfigSetting(eleActionTool)
+        #cb2ExcelFile
+        self.cb2ExcelFile.outputConfigSetting(eleActionTool)
         
         #btDstFileProcess
         self.btDstFileProcess.outputConfigSetting(eleActionTool)
@@ -445,6 +465,8 @@ class actionToolList(xmlLib):
         self.cbDstFile.updateConfigSetting(toolUi.cbDstFileName)
         #cbDstFileOverWrite
         self.cbDstFileOverWrite.updateConfigSetting(toolUi.cbDstFileOverWrite)
+        #cb2ExcelFile
+        self.cb2ExcelFile.updateConfigSetting(toolUi.cb2ExcelFile)
 
         #btDstFileProcess
         self.btDstFileProcess.updateConfigSetting(toolUi.btDstFileProcess)
@@ -478,6 +500,8 @@ class actionToolList(xmlLib):
         self.lbDstFileNote.updateGUISetting(toolUi.lbDstFileNote)
         #cbDstFileOverWrite
         self.cbDstFileOverWrite.updateGUISetting(toolUi.cbDstFileOverWrite)
+        #cb2ExcelFile
+        self.cb2ExcelFile.updateGUISetting(toolUi.cb2ExcelFile)
         
         #btDstFileProcess
         self.btDstFileProcess.updateGUISetting(toolUi.btDstFileProcess)
