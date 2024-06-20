@@ -146,7 +146,7 @@ class SPIDecodeLib(object):
             eoffset = 10 + int(strTimeList[1])
             strTime = str(int( baseTime * (10 ** eoffset)))
 
-            memoryAddr = self.__addMemroyData(dstTimerData, strTime, strMOSIList, strMISOList, memroryDataBase)
+            memoryAddr = self.__addMemroyData(dstTimerData, strTime, strMOSIList, strMISOList, memroryDataBase, SPI_CMD.SPI_PP)
         
         self.__createDstAddrData(memroryDataBase, dstAddrData)
 
