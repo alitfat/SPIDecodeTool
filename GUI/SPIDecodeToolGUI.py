@@ -10,6 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+AlignmentFlagDefault = QtCore.Qt.AlignmentFlag(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
 
 class Ui_SPIDecodeToolGUI(object):
     def setupUi(self, SPIDecodeToolGUI:QtWidgets.QWidget):
@@ -38,11 +39,11 @@ class Ui_SPIDecodeToolGUI(object):
         self.menuHelp.setObjectName("menuHelp")
         self.lbObjFileName = QtWidgets.QLabel(SPIDecodeToolGUI)
         self.lbObjFileName.setGeometry(QtCore.QRect(10, 40, 101, 16))
-        self.lbObjFileName.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.lbObjFileName.setAlignment(AlignmentFlagDefault)
         self.lbObjFileName.setObjectName("lbObjFileName")
         self.lbDstFileName = QtWidgets.QLabel(SPIDecodeToolGUI)
         self.lbDstFileName.setGeometry(QtCore.QRect(9, 170, 101, 20))
-        self.lbDstFileName.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.lbDstFileName.setAlignment(AlignmentFlagDefault)
         self.lbDstFileName.setObjectName("lbDstFileName")
         self.txObjFileName = QtWidgets.QTextEdit(SPIDecodeToolGUI)
         self.txObjFileName.setGeometry(QtCore.QRect(120, 40, 480, 50))
@@ -61,7 +62,7 @@ class Ui_SPIDecodeToolGUI(object):
         self.lbDstFilePath = QtWidgets.QLabel(SPIDecodeToolGUI)
         self.lbDstFilePath.setGeometry(QtCore.QRect(10, 100, 101, 20))
         self.lbDstFilePath.setTextFormat(QtCore.Qt.TextFormat.AutoText)
-        self.lbDstFilePath.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.lbDstFilePath.setAlignment(AlignmentFlagDefault)
         self.lbDstFilePath.setObjectName("lbDstFilePath")
         self.txDstFilePath = QtWidgets.QTextEdit(SPIDecodeToolGUI)
         self.txDstFilePath.setEnabled(False)
