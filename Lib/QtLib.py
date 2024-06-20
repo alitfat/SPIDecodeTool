@@ -506,7 +506,7 @@ class qtTextEdit(QTextEdit):
         return
 
 
-    def DragEnterEvent(self, e: QDropEvent) -> None:
+    def DragEnterEvent(self, e: QDragEnterEvent) -> None:
         """
         ------------------------------------------------------------------------------
          ドラッグ処理：ドラッグインフォ内容存在判断\n

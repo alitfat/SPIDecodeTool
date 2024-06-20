@@ -22,15 +22,6 @@ memoryBorderL4 = Border(top=Side(style=BORDER_THIN, color=BLACK),
                         left=Side(style=BORDER_DOTTED, color=BLACK),
                         right=Side(style=BORDER_THIN, color=BLACK))
 
-timerAddrBorderL1 = Border(top=Side(style=BORDER_THIN, color=BLACK), 
-                           bottom=Side(style=BORDER_THIN, color=BLACK), 
-                           left=Side(style=BORDER_THIN, color=BLACK))
-timerAddrBorderL23= Border(top=Side(style=BORDER_THIN, color=BLACK), 
-                           bottom=Side(style=BORDER_THIN, color=BLACK))
-timerAddrBorderL4 = Border(top=Side(style=BORDER_THIN, color=BLACK), 
-                           bottom=Side(style=BORDER_THIN, color=BLACK), 
-                           right=Side(style=BORDER_THIN, color=BLACK))
-
 timerBorderTop = Border(top=Side(style=BORDER_THIN, color=BLACK), 
                         left=Side(style=BORDER_THIN, color=BLACK), 
                         right=Side(style=BORDER_THIN, color=BLACK))
@@ -40,6 +31,17 @@ timerBorderBtm = Border(left=Side(style=BORDER_THIN, color=BLACK),
                         right=Side(style=BORDER_THIN, color=BLACK), 
                         bottom=Side(style=BORDER_THIN, color=BLACK))
 
+class SPI_CMD(int):
+    SPI_CONTINUE = 0x00   #前コメントを続きて実施する
+    SPI_PP = 0x02         #ページプログラム
+    SPI_READ = 0x03       #読み出し
+    SPI_RDSR1 = 0x05      #ステータス レジスタ1 読み出し
+    SPI_WREN  = 0x06      #WriteEnable
+    SPI_FAST_READ = 0x0B  #高速読み出し
+    SPI_RDSR3 = 0x15      #ステータス レジスタ3 読み出し
+    SPI_RDCR2 = 0x35      #ステータス レジスタ2 読み出し
+    SPI_RSFDP = 0x5A      #SFDP読み出し
+    
 class SPIDecodeLib(object):
     
     def __init__(self)->None:
@@ -64,7 +66,11 @@ class SPIDecodeLib(object):
         dstAddrData:dict[int, list[str]] ={}
         dstTimerData:dict[str, list[str]] ={}
         dstMemoryDataList:dict[str, list[str]] ={}
-        dstFileComment:list[str] = []
+        dstMemoryFileComment:list[str] = []
+        dstTimer1FileComment:list[str] = []
+        dstTimer2FileComment:list[str] = []
+        dstExcelSheetComment:list[list[str]] = []
+
 
         #対象ファイル内容取得処理
         bResult = self.FileSysProcess.getFileComment(srcFileAddr, srcfileComment)
@@ -80,21 +86,25 @@ class SPIDecodeLib(object):
         self.__createMemoryList(dstAddrData, dstMemoryDataList)
 
         #メモリテキスト出力フォーマット作成
-        self.__createMemoryTextFile(dstMemoryDataList, dstFileComment)
+        self.__createMemoryTextFile(dstMemoryDataList, dstMemoryFileComment)
         #メモリテキストファイル出力
-        bResult = self.FileSysProcess.writeFileComment(dstFileAddrList[0], dstFileComment)
+        bResult = self.FileSysProcess.writeFileComment(dstFileAddrList[0], dstMemoryFileComment)
         #タイムテキスト出力フォーマット作成
         #timer1
-        self.__createTimer1TextFile(dstTimerData, dstFileComment, csvType)
+        self.__createTimer1TextFile(dstTimerData, dstTimer1FileComment, csvType)
         #タイムテキストテキストファイル出力
-        bResult = self.FileSysProcess.writeFileComment(dstFileAddrList[1], dstFileComment)
+        bResult = self.FileSysProcess.writeFileComment(dstFileAddrList[1], dstTimer1FileComment)
         #timer2
-        self.__createTimer2TextFile(dstTimerData, dstFileComment, csvType)
+        self.__createTimer2TextFile(dstTimerData, dstTimer2FileComment, csvType)
         #タイムテキストテキストファイル出力
-        bResult = self.FileSysProcess.writeFileComment(dstFileAddrList[2], dstFileComment)
+        bResult = self.FileSysProcess.writeFileComment(dstFileAddrList[2], dstTimer2FileComment)
         if len(dstFileAddrList) >= 4 :
+            dstExcelSheetComment.clear()
+            dstExcelSheetComment.append(dstMemoryFileComment)
+            dstExcelSheetComment.append(dstTimer1FileComment)
+            dstExcelSheetComment.append(dstTimer2FileComment)
             #Excelファイル出力
-            bResult = self.__CreateExcelFile(dstFileAddrList[3], dstMemoryDataList, dstTimerData, csvType)
+            bResult = self.__CreateExcelFile(dstFileAddrList[3], dstExcelSheetComment)
         return bResult
     
     def __analyseSrcData(self,srcfileComment:list[str], dstAddrData:dict[int, list[str]], dstTimerData:dict[str, list[str]]) -> int:
@@ -112,38 +122,142 @@ class SPIDecodeLib(object):
             bResult = self.__analyseSrcData_Type1(analyseStrList, dstAddrData, dstTimerData)
         return csvType
 
+    def __analyseSrcData_Type1(self, analyseStrList:list[list[str]], dstAddrData:dict[int, list[str]], dstTimerData:dict[str, list[str]]) -> bool:
+        
+        memroryDataBase:dict[int, list[str]] = {}
+
+        startIndex:int = 0
+        for index in range(len(analyseStrList)):
+            if analyseStrList[index][0] == 'Time':
+                startIndex = index + 1
+                break
+        dstTimerData.clear()
+        for analyseStr in analyseStrList[startIndex:len(analyseStrList):1]:
+            #行内容取得
+            strTime = analyseStr[0]
+            strMOSI = analyseStr[1]
+            strMOSIList = self.StrLib.splitString(strMOSI, " ")
+            strMISO = analyseStr[2]
+            strMISOList = self.StrLib.splitString(strMISO, " ")
+
+            #time変換
+            strTimeList = self.StrLib.splitString(strTime, "e")
+            baseTime = float(strTimeList[0])
+            eoffset = 10 + int(strTimeList[1])
+            strTime = str(int( baseTime * (10 ** eoffset)))
+
+            memoryAddr = self.__addMemroyData(dstTimerData, strTime, strMOSIList, strMISOList, memroryDataBase)
+        
+        self.__createDstAddrData(memroryDataBase, dstAddrData)
+
+        return True
+
     def __analyseSrcData_Type2(self,analyseStrList:list[list[str]], dstAddrData:dict[int, list[str]], dstTimerData:dict[str, list[str]]) -> bool:
         memroryDataBase:dict[int, list[str]] = {}
-  
+        memoryAddr = 0x000000
+        spiCMDList:list[int] = []
         bResult = True
         dstTimerData.clear()
+        spiCMDList.clear()
+        preDataLen = 0
+        preSpiCMD =-1
         for analyseRowDataList in analyseStrList:
             dataLen = int(analyseRowDataList[4])
             if dataLen <= 4 :
                 continue
+            #行内容取得
             strTime = analyseRowDataList[1].replace('"','')
             strMOSI = analyseRowDataList[6].replace('"','').strip(" ")
-            strMISO = analyseRowDataList[5].replace('"','').strip(" ")
-            #行内容split
             strMOSIList = self.StrLib.splitString(strMOSI, " ")
+            strMISO = analyseRowDataList[5].replace('"','').strip(" ")
             strMISOList = self.StrLib.splitString(strMISO, " ")
-            dstTimerData[strTime] = []
-            dstTimerData[strTime].append(strMOSIList[0])
-            dstTimerData[strTime].append(strMOSIList[1])
-            dstTimerData[strTime].append(strMOSIList[2])
-            dstTimerData[strTime].append(strMOSIList[3])
-            #アドレス計算
-            memoryAddr = int(strMOSIList[1]+strMOSIList[2]+strMOSIList[3], 16)
-            memroryDataBase[memoryAddr] = []
 
-            #アドレスデータ取得
-            for memoryData in strMISOList[4:len(strMISOList):1]:
-                memroryDataBase[memoryAddr].append(memoryData)
-                dstTimerData[strTime].append(memoryData)
-        
+            curSpiCMD = int(strMOSIList[0], 16)
+            spiCMDList.append(curSpiCMD)
+
+            match curSpiCMD :
+                # 0x02 :ページプログラム
+                case SPI_CMD.SPI_PP:
+                    memoryAddr = self.__addMemroyData(dstTimerData, strTime, strMOSIList, strMISOList, memroryDataBase, curSpiCMD)
+
+                # 0x03 :読み出し
+                case SPI_CMD.SPI_READ:
+                    memoryAddr = self.__addMemroyData(dstTimerData, strTime, strMOSIList, strMISOList, memroryDataBase, curSpiCMD)
+
+                # 0x0B :高速読み出し
+                case SPI_CMD.SPI_FAST_READ:
+                    memoryAddr = self.__addMemroyData(dstTimerData, strTime, strMOSIList, strMISOList, memroryDataBase, curSpiCMD)
+
+                # 0x00 :前コメントを引き続き実施する 
+                case SPI_CMD.SPI_CONTINUE:
+                    if preSpiCMD != SPI_CMD.SPI_CONTINUE:
+                        memoryAddr =  memoryAddr + preDataLen -4
+                    else :
+                        memoryAddr =  memoryAddr + preDataLen
+
+                    strMemoryAddr = format(memoryAddr, "06X")
+                    dstTimerData[strTime] = []
+                    dstTimerData[strTime].append(strMOSIList[0])
+                    dstTimerData[strTime].append(strMemoryAddr[0:2])
+                    dstTimerData[strTime].append(strMemoryAddr[2:4])
+                    dstTimerData[strTime].append(strMemoryAddr[4:6])
+                    self.__addMemoryData2MemoryList(memroryDataBase, strMISOList, memoryAddr)
+                    self.__addMemoryData2TimerDataList(dstTimerData, strTime, strMISOList)
+
+                case _:
+                    continue
+
+            preDataLen = dataLen
+            preSpiCMD  = curSpiCMD
         self.__createDstAddrData(memroryDataBase, dstAddrData)
         return bResult
     
+    def __addMemroyData(self,dstTimerData:dict[str, list[str]], strTime:str, strMOSIList:list[str], strMISOList:list[str], memroryDataBase:dict[int, list[str]], spiCmd:SPI_CMD ) ->int:
+        #アドレス計算
+        memoryAddr = int(strMOSIList[1]+strMOSIList[2]+strMOSIList[3], 16)
+
+        dstTimerData[strTime] = []
+        dstTimerData[strTime].append(strMOSIList[0])
+        dstTimerData[strTime].append(strMOSIList[1])
+        dstTimerData[strTime].append(strMOSIList[2])
+        dstTimerData[strTime].append(strMOSIList[3])
+        if spiCmd == SPI_CMD.SPI_READ :
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+        elif spiCmd == SPI_CMD.SPI_FAST_READ :
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+        elif spiCmd == SPI_CMD.SPI_PP :
+            strMISOList = strMOSIList
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+            strMISOList.pop(0)
+        else: pass
+
+        self.__addMemoryData2MemoryList(memroryDataBase, strMISOList, memoryAddr)
+        self.__addMemoryData2TimerDataList(dstTimerData, strTime, strMISOList)
+        return memoryAddr
+
+    def __addMemoryData2MemoryList(self, memroryDataBase:dict[int, list[str]], strMISOList:list[str],  memoryAddr:int) ->None:
+        memroryDataBase[memoryAddr] = []
+        #アドレスデータ取得
+        for memoryData in strMISOList:
+            memroryDataBase[memoryAddr].append(memoryData)
+        return
+    
+    def __addMemoryData2TimerDataList(self,dstTimerData:dict[str, list[str]], strTime:str,  strMISOList:list[str]) ->None:
+        #アドレスデータ取得
+        for memoryData in strMISOList:
+            dstTimerData[strTime].append(memoryData)
+        return
+
+
     def __createDstAddrData(self, memroryDataBase:dict[int, list[str]], dstAddrData:dict[int, list[str]]) ->None:
         memroryDataSort:dict[int, list[str]] = {} 
         self.StrLib.sortDict(memroryDataBase, memroryDataSort)
@@ -162,49 +276,6 @@ class SPIDecodeLib(object):
                 dstAddrData[curBaseAddr].append(value)  
         return
     
-    def __analyseSrcData_Type1(self, analyseStrList:list[list[str]], dstAddrData:dict[int, list[str]], dstTimerData:dict[str, list[str]]) -> bool:
-        
-        memroryDataBase:dict[int, list[str]] = {}
-
-        startIndex:int = 0
-        for index in range(len(analyseStrList)):
-            if analyseStrList[index][0] == 'Time':
-                startIndex = index + 1
-                break
-        dstTimerData.clear()
-        for analyseStr in analyseStrList[startIndex:len(analyseStrList):1]:
-            #行内容取得
-            strTime = analyseStr[0]
-            strMOSI = analyseStr[1]
-            strMISO = analyseStr[2]
-            #行内容split
-            strTimeList = self.StrLib.splitString(strTime, "e")
-            strMOSIList = self.StrLib.splitString(strMOSI, " ")
-            strMISOList = self.StrLib.splitString(strMISO, " ")
-            #time計算
-            baseTime = float(strTimeList[0])
-            eoffset = 10 + int(strTimeList[1])
-            timer = str(int( baseTime * (10 ** eoffset)))
-            dstTimerData[timer] = []
-            #アドレス格納(strMOSIList[0]はcommand)
-            dstTimerData[timer].append(strMOSIList[0])
-            dstTimerData[timer].append(strMOSIList[1])
-            dstTimerData[timer].append(strMOSIList[2])
-            dstTimerData[timer].append(strMOSIList[3])
-
-            #アドレス計算
-            memoryAddr = int(strMOSIList[1]+strMOSIList[2]+strMOSIList[3], 16)
-            memroryDataBase[memoryAddr] = []
-
-            #アドレスデータ取得
-            for memoryData in strMISOList[4:len(strMISOList):1]:
-                memroryDataBase[memoryAddr].append(memoryData)
-                dstTimerData[timer].append(memoryData)
-        
-        self.__createDstAddrData(memroryDataBase, dstAddrData)
-
-        return True
-
     def __createMemoryList(self,dstResult:dict[int, list[str]],dstMemoryDataList:dict[str, list[str]] ) -> None:
         dstMemoryDataList.clear()
         hexAddress_old = ""
@@ -276,13 +347,18 @@ class SPIDecodeLib(object):
             lineStr += '30\t'+'31\t'+'32\t'+'33\t'+'34\t'+'35\t'+'36\t'+'37\t'
             lineStr += '38\t'+'39\t'+'3A\t'+'3B\t'+'3C\t'+'3D\t'+'3E\t'+'3F\n'
         else:
+            lstMemoryData = list(dstTimerData.values())
+            lstMemoryCount = [len(MemoryCount) for MemoryCount in lstMemoryData]
+            maxCount = max(lstMemoryCount) - 4
             lineStr = 'Timer       \t'
             lineStr += 'Address\t'
+            
             index = 0
-            while index <1024 :
+            while index <maxCount :
                 hexIndex = format(index, "03X")
                 lineStr = lineStr + hexIndex + '\t'
                 index += 1
+            lineStr = lineStr[:-1] + "\n"
 
         textFileComment.append(lineStr)
         TimerLsb = 10 ** 7
@@ -358,7 +434,11 @@ class SPIDecodeLib(object):
             textFileComment.append(lineStr)
         return
     
-    def __CreateExcelFile(self,dstFileAddr:str, dstMemoryDataList:dict[str, list[str]], dstTimerData:dict[str, list[str]], csvType:int) ->bool:
+    def __CreateExcelFile(self,dstFileAddr:str, dstExcelSheetComment:list[list[str]]) ->bool:
+        dstMemoryFileComment = dstExcelSheetComment[0]
+        dstTimer1FileComment = dstExcelSheetComment[1]
+        dstTimer2FileComment = dstExcelSheetComment[2]
+
         #ExcelFile作成
         bResult = self.ExcelLib.createExcelFile(dstFileAddr)
         bResult = self.ExcelLib.setWorkSheet()
@@ -367,185 +447,116 @@ class SPIDecodeLib(object):
 
         #Memoryシート作成
         self.ExcelLib.modifySheetName(dstSheetName=fileName[1] + '_Memory')
-        self.__CreateExcelFile_MemoryDataSheet(dstMemoryDataList)
+        self.__CreateExcelFile_MemoryDataSheet(dstMemoryFileComment)
 
         #Timerシート作成
         self.ExcelLib.createSheet(fileName[1] + '_Timer1')
-        self.__CreateExcelFile_Timer1DataSheet(dstTimerData, csvType)
+        self.__CreateExcelFile_Timer1DataSheet(dstTimer1FileComment)
 
         self.ExcelLib.createSheet(fileName[1] + '_Timer2')
-        self.__CreateExcelFile_Timer2DataSheet(dstTimerData, csvType)
+        self.__CreateExcelFile_Timer2DataSheet(dstTimer2FileComment)
+
         #ExcelFile保存
         self.ExcelLib.save()
         return True
     
-    def __CreateExcelFile_MemoryDataSheet(self,dstMemoryDataList:dict[str, list[str]]) ->None:
-        #タイトル作成
-        rowIndex = 2
-        colIndex = 2
-        self.ExcelLib.addCellValue(rowIndex,colIndex,'Address')
-        colIndex += 1
-        colDataIndex = 0
-        while(colDataIndex < 16):
-            self.ExcelLib.addCellValue(rowIndex,colIndex,format(colDataIndex, "02X"))
-            colIndex += 1
-            colDataIndex += 1
+    def __CreateExcelFile_MemoryDataSheet(self,dstMemoryFileComment:list[str]) ->None:
         
+        rowIndex = 2
+
         #列幅設定
         self.ExcelLib.setColumnsWidth(2,2, 9)
         self.ExcelLib.setColumnsWidth(3,18, 3.5)
 
-        #メモリデータ内容出力
-        for address, valueList in dstMemoryDataList.items():
-            rowIndex += 1
-            colIndex = 2
-            self.ExcelLib.addCellValue(rowIndex,colIndex, address)
-            colIndex += 1
-            for value in valueList:
-                self.ExcelLib.addCellValue(rowIndex,colIndex, value)
-                colIndex += 1
-
-        #枠線設定
-        self.ExcelLib.setBorder(2,rowIndex, 2, 2)
-        self._SetRowAddrDataBorder(2, rowIndex, 3)
-
         #タイトル背景色設定
         colorValue = 'B4E6A0'
         self.ExcelLib.setBackGroundColor(2, 2, 18, colorValue)
+
+        #セルデータ入力
+        for rowStrComment in dstMemoryFileComment:
+            colIndex = 2
+            rowStrComment = rowStrComment.replace('\n', '')
+            rowStrList = rowStrComment.split('\t')
+            for rowStr in rowStrList:
+                self.ExcelLib.addCellValue(rowIndex,colIndex, rowStr.strip(" "))
+                colIndex += 1
+            rowIndex += 1
+
+        #枠線設定
+        rowIndex -= 1
+        self.ExcelLib.setBorder(2,rowIndex, 2, 2)
+        self._SetRowAddrDataBorder(2, rowIndex, 3)
         colorValue = 'C0C0C0'
         self.ExcelLib.setBackGroundColorByCellValue(3, rowIndex, 3, 18,'xx', colorValue)
         return
     
-    def __CreateExcelFile_Timer1DataSheet(self,dstTimerData:dict[str, list[str]], csvType:int) ->None:
-        #タイトル作成
+    def __CreateExcelFile_Timer1DataSheet(self, dstTimer1FileComment:list[str]) ->None:
+
         rowIndex = 2
-        colIndex = 2
 
-        if csvType == 1:
-            self.ExcelLib.addCellValue(rowIndex,colIndex,'Timer(ms)')
-            hexFormat = '02X'
-        else :
-            self.ExcelLib.addCellValue(rowIndex,colIndex,'Timer')
-            hexFormat = '03X'
-        
-        colIndex += 1
-        self.ExcelLib.addCellValue(rowIndex,colIndex,'Address')
-        colIndex += 3
+        colValueEndIndex = len(dstTimer1FileComment[0].split('\t')) + 1
 
-        colDataEndIndex = 64
-        if csvType != 1:
-            colDataEndIndex = 1024
-        
-        colValueEndIndex = colDataEndIndex + 5
-        colDataIndex = 0
-        while(colDataIndex < colDataEndIndex):
-            self.ExcelLib.addCellValue(rowIndex,colIndex,format(colDataIndex, hexFormat))
-            
-            colIndex += 1
-            colDataIndex += 1
-        
         #列幅設定
-        self.ExcelLib.setColumnsWidth(2,2, 9)
-        self.ExcelLib.setColumnsWidth(3,colValueEndIndex, 3.5)
+        self.ExcelLib.setColumnsWidth(2,3, 12)
+        self.ExcelLib.setColumnsWidth(4,colValueEndIndex, 3.5)
 
         #タイトル背景色設定
         colorValue = 'B4E6A0'
-        self.ExcelLib.setBackGroundColor(rowIndex, rowIndex, colValueEndIndex, colorValue)
+        self.ExcelLib.setBackGroundColor(2, 2, colValueEndIndex, colorValue)
 
-        TimerLsb = 10 ** 7
+        #セルデータ入力
         colorValue = 'C0C0C0'
-        #メモリデータ内容出力
-        for timer, valueList in dstTimerData.items():
-            rowIndex += 1
+        for rowStrComment in dstTimer1FileComment:
             colIndex = 2
-            if csvType == 1:
-                self.ExcelLib.addCellValue(rowIndex,colIndex, format(int(timer)/TimerLsb, 'f'))
-            else:
-                self.ExcelLib.addCellValue(rowIndex,colIndex, timer)
-            colIndex += 1
-            for value in valueList[1:len(valueList):1]:
-                self.ExcelLib.addCellValue(rowIndex,colIndex, value)
+            rowStrComment = rowStrComment.replace('\n', '')
+            rowStrList = rowStrComment.split('\t')
+            for rowStr in rowStrList:
+                self.ExcelLib.addCellValue(rowIndex,colIndex, rowStr.strip(" "))
                 colIndex += 1
+            
             if colIndex > colValueEndIndex:
                 colIndex = colValueEndIndex
             if colIndex != colValueEndIndex:   
                 self.ExcelLib.setBackGroundColor(rowIndex, colIndex, colIndex, colorValue)
-            self.ExcelLib.setBorder(rowIndex,rowIndex, 6, colIndex)
+            self.ExcelLib.setBorder(rowIndex,rowIndex, 2, colIndex)
 
-        #枠線設定
-        self.ExcelLib.setBorder(2,rowIndex, 2, 2)
-        self.__SetTimerAddrBorder(2, rowIndex, 3)
-        self.ExcelLib.setBorder(2,2, 6, colValueEndIndex)
+            rowIndex += 1
+
         return
     
-    def __CreateExcelFile_Timer2DataSheet(self,dstTimerData:dict[str, list[str]], csvType:int) ->None:
+    def __CreateExcelFile_Timer2DataSheet(self, dstTimer2FileComment:list[str]) ->None:
         #タイトル作成
         rowIndex = 2
-        colIndex = 2
-        if csvType == 1:
-            self.ExcelLib.addCellValue(rowIndex,colIndex,'Timer(ms)')
-        else:
-            self.ExcelLib.addCellValue(rowIndex,colIndex,'Timer')
-        
-        colIndex += 1
-        self.ExcelLib.addCellValue(rowIndex,colIndex,'Address')
-        colIndex += 3
-        colDataIndex = 0
-        while(colDataIndex < 16):
-            self.ExcelLib.addCellValue(rowIndex,colIndex,format(colDataIndex, "02X"))
-            colIndex += 1
-            colDataIndex += 1
-        
+        colValueEndIndex = len(dstTimer2FileComment[0].split('\t')) + 1
+
         #列幅設定
-        self.ExcelLib.setColumnsWidth(2,2, 9)
-        self.ExcelLib.setColumnsWidth(3,21, 3.5)
+        self.ExcelLib.setColumnsWidth(2,3, 12)
+        self.ExcelLib.setColumnsWidth(4,colValueEndIndex, 3.5)
 
         #タイトル背景色設定
         colorValue = 'B4E6A0'
-        self.ExcelLib.setBackGroundColor(rowIndex, rowIndex, 21, colorValue)
+        self.ExcelLib.setBackGroundColor(2, 2, colValueEndIndex, colorValue)
 
-        TimerLsb = 10 ** 7
+        #セルデータ入力
         colorValue = 'C0C0C0'
-        #メモリデータ内容出力
-        for timer, valueList in dstTimerData.items():
-            rowIndex += 1
+        for oneRowStrComment in dstTimer2FileComment:
             startRowIndex = rowIndex
-            colIndex = 2
-            if csvType == 1:
-                self.ExcelLib.addCellValue(rowIndex,colIndex, format(int(timer)/TimerLsb, 'f'))
-            else:
-                self.ExcelLib.addCellValue(rowIndex,colIndex, timer)
-            colIndex += 1
-            hexAddr = ''
-            for value in valueList[1:len(valueList):1]:
-                if colIndex < 6 :
-                    hexAddr += value
-
-                if colIndex == 22 :
-                    
-                    decAddr = int(hexAddr, 16) + 16
-                    hexAddr = format(decAddr, "06X")
-
-                    rowIndex += 1
-                    colIndex = 3
-                    self.ExcelLib.addCellValue(rowIndex,colIndex, hexAddr[0:2])
+            rowStrCommentList =  oneRowStrComment[:-1].split('\n')
+            for rowStrComment in rowStrCommentList:
+                colIndex = 2
+                rowStrList = rowStrComment.split('\t')
+                for rowStr in rowStrList:
+                    self.ExcelLib.addCellValue(rowIndex,colIndex, rowStr.strip(" "))
                     colIndex += 1
-                    self.ExcelLib.addCellValue(rowIndex,colIndex, hexAddr[2:4])
-                    colIndex += 1
-                    self.ExcelLib.addCellValue(rowIndex,colIndex, hexAddr[4:6])
-                    colIndex += 1
-
-                self.ExcelLib.addCellValue(rowIndex,colIndex, value)
-                colIndex += 1
-            
+                rowIndex += 1
             #タイマー枠線設定
-            self.__SetTimerBorder(startRowIndex, rowIndex, 2)
-            self.ExcelLib.setBackGroundColor(rowIndex, colIndex, 21, colorValue)
+            self.__SetTimerBorder(startRowIndex, rowIndex - 1, 2)
+            self.ExcelLib.setBackGroundColor(rowIndex - 1, colIndex, colValueEndIndex, colorValue)
 
         #枠線設定
-        self.ExcelLib.setBorder(2,2, 2, 2)
-        self.__SetTimerAddrBorder(2, rowIndex, 3)
-        self._SetRowAddrDataBorder(2, rowIndex, 6)
+        rowIndex -= 1
+        self.ExcelLib.setBorder(2,rowIndex, 3, 3)
+        self._SetRowAddrDataBorder(2, rowIndex, 4)
         return
 
     def __SetTimerBorder(self, startRowIndex:int, endRowIndex:int, columnIndex:int) ->None:
@@ -560,14 +571,6 @@ class SPIDecodeLib(object):
             self.ExcelLib.setBorder(rowIndex, rowIndex, columnIndex, columnIndex, timerBorderMid)
             rowIndex += 1
         self.ExcelLib.setBorder(rowIndex, rowIndex, columnIndex, columnIndex, timerBorderBtm)
-        return
-    
-    def __SetTimerAddrBorder(self, startRowIndex:int, endRowIndex:int, columnIndex:int) ->None:
-        self.ExcelLib.setBorder(startRowIndex,endRowIndex, columnIndex, columnIndex, timerAddrBorderL1)
-        columnIndex += 1
-        self.ExcelLib.setBorder(startRowIndex,endRowIndex, columnIndex, columnIndex, timerAddrBorderL23)
-        columnIndex += 1
-        self.ExcelLib.setBorder(startRowIndex,endRowIndex, columnIndex, columnIndex, timerAddrBorderL4)
         return
 
     def _SetRowAddrDataBorder(self, startRowIndex:int, endRowIndex:int, columnIndex:int) ->None:
