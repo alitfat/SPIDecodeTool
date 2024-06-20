@@ -82,7 +82,7 @@ class Ui_SPIDecodeTool(Ui_SPIDecodeToolGUI):
         self.Form.closeEvent = lambda e:self.closeEvent(e)
         return
     
-    def closeEvent(self, event: QCloseEvent|None ):
+    def closeEvent(self, event: QCloseEvent|None):
         """
         -----------------------------------------------------------------
         SPIDecodeToolツールクロスイベント\n
